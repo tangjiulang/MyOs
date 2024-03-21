@@ -1,0 +1,2 @@
+CompileFlags:
+  Add: [-I, "/home/atangyl/computer_operation/include"]
