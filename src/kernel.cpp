@@ -111,8 +111,6 @@ extern "C" void callConstructors() {
 }
 
 extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
-    printf("hello world!\n");
-    printf("cc");
 
     GlobalDescriptorTable gdt;
     InterruptManager interrupts(0x20, &gdt);
@@ -126,7 +124,7 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
     MouseDriver mouse(&interrupts, &mousehandler);
     drvManager.AddDriver(&mouse);
     PeripheralComponentInterconnectController PCIController;
-    PCIController.SelectDriver(&drvManager);
+    PCIController.SelectDriver(&drvManager, &interrupts);
     drvManager.ActivateAll();
     
     interrupts.Activate();
