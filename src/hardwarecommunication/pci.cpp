@@ -165,4 +165,5 @@ BaseAddressRegister PeripheralComponentInterconnectController::GetBaseAddressReg
       result.address = (uint8_t*)(bar_value & ~0x3);
       result.perfetchable = false;
   }
+  return result;
 }

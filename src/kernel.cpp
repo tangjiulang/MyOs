@@ -5,11 +5,15 @@
 #include "hardwarecommunication/pci.h"
 #include "drivers/keyboard.h"
 #include "drivers/mouse.h"
+#include "drivers/vga.h"
+#include "gui/desktop.h"
+#include "gui/window.h"
 
 using namespace myos;
 using namespace myos::common;
 using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
+using namespace myos::gui;
 
 void printf(const char* str) {
     static uint16_t* VideoMemory = (uint16_t*) 0xb8000;
@@ -68,7 +72,7 @@ public:
 
 class MouseToConsole : public MouseEventHandler {
 public:
-    MouseToConsole() : x(40), y(12) { }
+    MouseToConsole() : x(40), y(12) {}
 
     void OnActivate() {
         uint16_t* VideoMemory = (uint16_t*)0xb8000;
@@ -77,7 +81,7 @@ public:
                                     (VideoMemory[y * 80 + x] & 0x00ff);
     }
 
-    void OnMouseMove(int8_t nx, int8_t ny) {
+    void OnMouseMove(int8_t nx, int8_t ny) override {
         uint16_t* VideoMemory = (uint16_t*)0xb8000;
         VideoMemory[y * 80 + x] = ((VideoMemory[y * 80 + x] & 0xf000) >> 4) | 
                               ((VideoMemory[y * 80 + x] & 0x0f00) << 4) | 
@@ -112,21 +116,57 @@ extern "C" void callConstructors() {
 
 extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
 
+    // SET GLOBAL DESCRIPTOR TABLE, INTERRUPT MANAGER, DRIVERMANAGER
     GlobalDescriptorTable gdt;
     InterruptManager interrupts(0x20, &gdt);
 
+#define GRAPHICMODE
+
+#ifdef GRAPHICMODE
+    Desktop desktop(320, 200, 0x00, 0x00, 0xA8);
+#endif
+
     DriverManager drvManager;
+
+    // SET KEY BOARD DRIVER
+#ifdef  GRAPHICMODE
+    KeyBoardDriver keyboard(&interrupts, &desktop);
+#else    
     PrintKeyboardEventHandler kbhandler;
-    KeyBoardDriver keyboard(&interrupts, &kbhandler);
+    KeyBoardDriver keyboard(&interrupts, &kbhandler);    
+#endif
     drvManager.AddDriver(&keyboard);
 
+    // SET MOUSE DRIVER
+#ifdef  GRAPHICMODE
+    MouseDriver mouse(&interrupts, &desktop);
+#else
     MouseToConsole mousehandler;
     MouseDriver mouse(&interrupts, &mousehandler);
+#endif
     drvManager.AddDriver(&mouse);
+
+    // SET PCI DRIVER
     PeripheralComponentInterconnectController PCIController;
     PCIController.SelectDriver(&drvManager, &interrupts);
+
+    VideoGraphicsArray vga;
+
+
     drvManager.ActivateAll();
     
+#ifdef GRAPHICMODE
+    vga.SetMode(320, 200, 8);
+    Window w1(&desktop, 10, 10, 20, 20, 0xA8, 0x00, 0x00);
+    desktop.AddChild(&w1);
+    Window w2(&desktop, 40, 15, 30, 30, 0x00, 0xA8, 0x00);
+    desktop.AddChild(&w2);
+#endif
     interrupts.Activate();
-    while(1);
+
+    while(1) {
+#ifdef GRAPHICMODE
+      desktop.Draw(&vga);
+#endif
+    }
 }
