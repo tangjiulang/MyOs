@@ -6,6 +6,7 @@
 #include "port.h"
 #include "drivers/driver.h"
 
+#include "memorymanagement.h"
 namespace myos 
 {
   namespace hardwarecommunication 
@@ -32,8 +33,6 @@ namespace myos
       PeripheralComponentInterconnectDeviceDescriptor();
       ~PeripheralComponentInterconnectDeviceDescriptor();
 
-    private:
-      friend PeripheralComponentInterconnectController;
       myos::common::uint32_t portBase;
       myos::common::uint32_t interrupt;
 
@@ -73,7 +72,7 @@ namespace myos
       PeripheralComponentInterconnectDeviceDescriptor GetDeviceDescriptor(myos::common::uint8_t bus, 
                                                                           myos::common::uint8_t device,
                                                                           myos::common::uint8_t function);
-      myos::drivers::Driver* GetDriver(PeripheralComponentInterconnectDeviceDescriptor dev, myos::hardwarecommunication::InterruptManager* iterrupts);
+      myos::drivers::Driver* GetDriver(PeripheralComponentInterconnectDeviceDescriptor dev, myos::hardwarecommunication::InterruptManager* interrupts);
 
       BaseAddressRegister GetBaseAddressRegister(myos::common::uint8_t bus, 
                                                  myos::common::uint8_t device,

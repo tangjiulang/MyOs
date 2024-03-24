@@ -8,12 +8,15 @@
 #include "drivers/vga.h"
 #include "gui/desktop.h"
 #include "gui/window.h"
+#include "multitasking.h"
+#include "memorymanagement.h"
 
 using namespace myos;
 using namespace myos::common;
 using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
 using namespace myos::gui;
+
 
 void printf(const char* str) {
     static uint16_t* VideoMemory = (uint16_t*) 0xb8000;
@@ -48,7 +51,7 @@ void printf(const char* str) {
     }
 }
 
-void printfHex(uint8_t key) {
+void printf(uint8_t key) {
     char* foo = (char*)"00";
     const char* hex = "0123456789ABCDEF";
     foo[0] = hex[(key >> 4) & 0x0f];
@@ -56,9 +59,14 @@ void printfHex(uint8_t key) {
     printf((const char*)foo);
 }
 
-void printfHex(uint16_t key) {
-    printfHex((uint8_t)((key >> 8) & 0xFF));
-    printfHex((uint8_t)(key & 0xFF));
+void printf(uint16_t key) {
+    printf((uint8_t)((key >> 8) & 0xFF));
+    printf((uint8_t)(key & 0xFF));
+}
+
+void printf(uint32_t key) {
+    printf((uint16_t)((key >> 16) & 0xFFFF));
+    printf((uint16_t)(key & 0xFFFF));
 }
 
 class PrintKeyboardEventHandler : public KeyboardEventHandler {
@@ -114,18 +122,48 @@ extern "C" void callConstructors() {
     }
 }
 
+void taskA() {
+    while(1) printf("A");
+}
+
+void taskB() {
+    while(1) printf("B");
+}
+
 extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
 
-    // SET GLOBAL DESCRIPTOR TABLE, INTERRUPT MANAGER, DRIVERMANAGER
+    // SET GLOBAL DESCRIPTOR TABLE
     GlobalDescriptorTable gdt;
-    InterruptManager interrupts(0x20, &gdt);
+    
+    // SET MEMORYMANAGER -> HEAP 10K 
+    size_t heap = 10 * 1024 * 1024;
+    uint32_t*  memupper = (uint32_t*)((size_t)multiboot_structure + 8);
+    MemoryManager memoryManager(heap, (*memupper) * 1024 - heap - 10 * 1024);
+    printf("heap: 0x");
+    printf(heap);
 
-#define GRAPHICMODE
+    void* allocated = memoryManager.malloc(1024);
+    printf("\n allocated: 0x");
+    printf((size_t)allocated);
+    printf("\n");
+
+    // SET TASKING MANAGER
+    TaskManager taskManager;
+    // Task task1(&gdt, taskA);
+    // Task task2(&gdt, taskB);
+    // taskManager.AddTask(&task1);
+    // taskManager.AddTask(&task2);
+
+    // SET INTERRUPT MANAGER
+    InterruptManager interrupts(0x20, &gdt, &taskManager);
+
+// #define GRAPHICMODE
 
 #ifdef GRAPHICMODE
     Desktop desktop(320, 200, 0x00, 0x00, 0xA8);
 #endif
 
+    // SET DRIVERMANAGER
     DriverManager drvManager;
 
     // SET KEY BOARD DRIVER

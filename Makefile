@@ -5,11 +5,14 @@ LDPARAMS = -melf_i386 -no-pie
 
 objects = obj/loader.o \
 					obj/gdt.o \
+					obj/memorymanagement.o\
 					obj/drivers/driver.o \
 					obj/hardwarecommunication/port.o \
 					obj/hardwarecommunication/interruptstubs.o \
 					obj/hardwarecommunication/interrupts.o \
 					obj/hardwarecommunication/pci.o\
+					obj/drivers/amd_am79c973.o\
+					obj/multitasking.o\
 					obj/drivers/keyboard.o \
 					obj/drivers/mouse.o \
 					obj/drivers/vga.o\

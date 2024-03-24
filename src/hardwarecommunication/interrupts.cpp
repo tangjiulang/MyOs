@@ -1,10 +1,13 @@
 #include "hardwarecommunication/interrupts.h"
+#include "common/types.h"
+#include "multitasking.h"
 
+using namespace myos;
 using namespace myos::common;
 using namespace myos::hardwarecommunication;
 
 void printf(const char*);
-void printfHex(uint8_t);
+void printf(uint8_t);
 
 InterruptHandler::InterruptHandler(uint8_t interruptNumber, InterruptManager* interruptManager) {
   this->interruptNumber = interruptNumber;
@@ -41,13 +44,14 @@ void InterruptManager::SetInterruptDescriptorTableEntry(
   interruptDescriptorTable[interruptNumber].reserved = 0;
 }
 
-InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescriptorTable* gdt)
+InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescriptorTable* gdt, TaskManager* taskManager)
  : picMasterCommand(0x20),
   picMasterData(0x21), 
   picSlaveCommand(0xA0), 
   picSlaveData(0xA1) {
+    this->taskManager = taskManager;
     this->hardwareInterruptOffset = hardwareInterruptOffset;
-    uint16_t codeSegment = (gdt->CodeSegmentSelector()) >> 3;
+    uint16_t codeSegment = (gdt->CodeSegmentSelector()) << 3;
 
     const uint8_t IDT_INTERRUPT_GATE = 0xe;
     for (uint16_t i = 0; i < 256; i++) {
@@ -155,9 +159,13 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interruptNumber, uint32_t e
     esp = handlers[interruptNumber]->HandleInterrupt(esp);
   } else if (interruptNumber != hardwareInterruptOffset) {
     printf("UNHANDLED INTERRUPT 0X");
-    printfHex(interruptNumber);
+    printf(interruptNumber);
   }
   
+  if (interruptNumber == hardwareInterruptOffset) {
+    esp = (uint32_t)taskManager->Schedule((CPUState*)esp);
+  }
+
   if (hardwareInterruptOffset <= interruptNumber && interruptNumber < hardwareInterruptOffset + 16) {
     picMasterCommand.Write(0x20);
     if (hardwareInterruptOffset + 8 <= interruptNumber) {
