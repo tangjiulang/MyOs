@@ -33,6 +33,8 @@ HandleInterruptRequest 0x0D
 HandleInterruptRequest 0x0E
 HandleInterruptRequest 0x0F
 HandleInterruptRequest 0x31
+HandleInterruptRequest 0x80
+
 HandleException 0x00
 HandleException 0x01
 HandleException 0x02
@@ -67,7 +69,7 @@ int_bottom:
   push (interruptnumber)
   call __ZN4myos21hardwarecommunication16InterruptManager15HandleInterruptEhj
 
-  movl %eax, %esp
+  mov %eax, %esp
   
   popl %eax
   popl %ebx

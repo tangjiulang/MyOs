@@ -133,7 +133,6 @@ PeripheralComponentInterconnectDeviceDescriptor PeripheralComponentInterconnectC
   result.iterface_id = Read(bus, device, function, 0x09);
   result.subclass_id = Read(bus, device, function, 0x0A);
   result.class_id = Read(bus, device, function, 0x0B);
-  
   result.interrupt = Read(bus, device, function, 0x3C);
 
   return result;

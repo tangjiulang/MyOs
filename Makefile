@@ -12,13 +12,19 @@ objects = obj/loader.o \
 					obj/hardwarecommunication/interrupts.o \
 					obj/hardwarecommunication/pci.o\
 					obj/drivers/amd_am79c973.o\
-					obj/multitasking.o\
 					obj/drivers/keyboard.o \
 					obj/drivers/mouse.o \
 					obj/drivers/vga.o\
+					obj/drivers/ata.o\
+					obj/syscalls.o\
+					obj/multitasking.o\
 					obj/gui/widget.o\
 					obj/gui/desktop.o\
 					obj/gui/window.o\
+					obj/net/etherframe.o\
+					obj/net/arp.o\
+					obj/net/ipv4.o\
+					obj/net/icmp.o\
 					obj/kernel.o
 
 obj/%.o: src/%.cpp

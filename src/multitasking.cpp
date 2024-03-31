@@ -7,7 +7,7 @@ Task::Task(GlobalDescriptorTable* gdt, void entrypoint()) {
   cpustate = (CPUState*)(stack + 4096 - sizeof(CPUState));
 
   cpustate->eax = 0;
-  cpustate->ebp = 0;
+  cpustate->ebx = 0;
   cpustate->ecx = 0;
   cpustate->edx = 0;
 
