@@ -1,7 +1,5 @@
 #include "net/ipv4.h"
-#include "common/types.h"
-#include "memorymanagement.h"
-#include "net/etherframe.h"
+
 
 using namespace myos;
 using namespace common;
@@ -19,8 +17,11 @@ InternetProtocolV4Handler::~InternetProtocolV4Handler() {
   }
 }
 
-bool InternetProtocolV4Handler::OnInternetProtocolReceive(uint32_t srcIP_BE, uint32_t dstIP_BE, uint8_t* internelProtocolPayload, uint32_t size) {
-  backend->Send(dstIP_BE, protocol, internelProtocolPayload, size);
+bool InternetProtocolV4Handler::OnInternetProtocolReceive(uint32_t srcIP_BE, uint32_t dstIP_BE, uint8_t* internetProtocolPayload, uint32_t size) {
+  return false;
+}
+void InternetProtocolV4Handler::Send(uint32_t dstIP_BE, uint8_t* internetProtocolPayload, uint32_t size) {
+    backend->Send(dstIP_BE, protocol, internetProtocolPayload, size);
 }
 
 InternetProtocolV4Provider::InternetProtocolV4Provider(EtherFrameProvider* backend, AddressResolutionProtocol* arp, common::uint32_t gatewayIP, common::uint32_t subnetMask) 
@@ -57,7 +58,9 @@ bool InternetProtocolV4Provider::OnEtherFrameReceived(uint8_t* etherframePayload
     ip_message->timeToLive = 0x40;
     ip_message->checksum = CheckSum((uint16_t*) ip_message, 4 * ip_message->headerLength);
   }
+  return sendBack;
 }
+void printf(const char*);
 
 void InternetProtocolV4Provider::Send(uint32_t dstIP_BE, uint8_t protocol, uint8_t* data, uint32_t size) {
   uint8_t* buffer = (uint8_t*)MemoryManager::activeMemoryManager->malloc(sizeof(InternetProtocolV4Message) + size);
@@ -71,6 +74,7 @@ void InternetProtocolV4Provider::Send(uint32_t dstIP_BE, uint8_t protocol, uint8
 
   message->ident = 0x0100;
   message->flagsAndOffset = 0x0040;
+  message->timeToLive = 0x40;
   message->protocol = protocol;
 
   message->dstIP = dstIP_BE;
@@ -86,17 +90,20 @@ void InternetProtocolV4Provider::Send(uint32_t dstIP_BE, uint8_t protocol, uint8
   if ((dstIP_BE & subnetMask) != (message->srcIP & subnetMask)) {
     route = gatewayIP;
   }
+  printf("\nIPV4 SENDING\n");
   backend->Send(arp->Resolve(route), this->etherTYPE_BE, buffer, sizeof(InternetProtocolV4Message) + size);
   MemoryManager::activeMemoryManager->free(buffer);
 }
 
 uint16_t InternetProtocolV4Provider::CheckSum(uint16_t* data, uint32_t size) {
-  uint16_t tmp = 0;
+  uint32_t tmp = 0;
   for (int i = 0; i < size / 2; i++) {
     tmp += ((data[i] & 0xFF00) >> 8) | ((data[i] & 0x00FF) << 8);
   }
 
+  if (size % 2) tmp += ((uint16_t)((char*)data)[size - 1]) << 8;
+
   while (tmp & 0xFFFF0000) tmp = (tmp & 0xFFFF) + (tmp >> 16);
 
-  return ((tmp & 0xFF00) >> 8) | ((tmp & 0x00FF) << 8);
+  return ((~tmp & 0xff00) >> 8) | ((~tmp & 0x00ff) << 8);
 }

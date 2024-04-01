@@ -17,7 +17,8 @@
 #include "net/arp.h"
 #include "net/ipv4.h"
 #include "net/icmp.h"
-
+#include "net/udp.h"
+ 
 
 using namespace myos;
 using namespace myos::common;
@@ -135,12 +136,23 @@ void sysprintf(char* str) {
 }
 
 void taskA() {
-    while(1) sysprintf("A");
+    while(1) sysprintf((char*)"A");
 }
 
 void taskB() {
-    while(1) sysprintf("B");
+    while(1) sysprintf((char*)"B");
 }
+
+class PrintfUDPHandler : public UserDatagramProtocolHandler {
+public:
+    void HandleUserDatagramProtocolMessage(UserDatagramProtocolSocket* socket, common::uint8_t* data, common::uint16_t size) {
+        char* foo = (char*)"";
+        for (int i = 0; i < size; i++) {
+            foo[0] = data[i];
+            printf(foo);
+        }
+    }
+};
 
 extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
 
@@ -234,7 +246,7 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
     
     // third: 0x1E8
     // fourth: 0x168
-
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n");
     uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
     uint32_t ip_be = ((uint32_t)ip4 << 24)
                    | ((uint32_t)ip3 << 16)
@@ -263,18 +275,17 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
                    | ((uint32_t)subnet1);
     
     InternetProtocolV4Provider ipv4(&etherframe, &arp, gip_be, subnet_be);
-
+    InternetControlMessageProtocolHandler icmp(&ipv4);
+    UserDatagramProtocolProvider udp(&ipv4);
     interrupts.Activate();
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n");
     // arp.Resolve(gip_be);
-    ipv4.Send(gip_be, 0x0008, (uint8_t*)"Hello Network", 13);
-
-    // etherframe.Send(0xFFFFFFFFFFFF, 0x0608, (uint8_t*)"F00", 3);
-    // eth0->Send((uint8_t*)("Hello Network"), 13);
-
-
-    
-
+    // ipv4.Send(gip_be, 0x0008, (uint8_t*)"Hello Network", 13);
+    arp.BroadcastMACAddress(gip_be);
+    icmp.RequestEchoReply(gip_be);
+    PrintfUDPHandler udpHandler;
+    UserDatagramProtocolSocket* socket = udp.Listen(1234);
+    udp.Bind(socket, &udpHandler);
+    // udp.Send(socket, (uint8_t*)"Hello World!", 12);
 
     while(1) {
 #ifdef GRAPHICMODE

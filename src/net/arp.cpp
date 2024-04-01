@@ -1,6 +1,5 @@
 #include "net/arp.h"
 #include "common/types.h"
-#include "drivers/amd_am79c973.h"
 
 using namespace myos;
 using namespace net;
@@ -11,13 +10,13 @@ AddressResolutionProtocol::AddressResolutionProtocol(EtherFrameProvider* backend
   numCacheEntries = 0;
 }
 AddressResolutionProtocol::~AddressResolutionProtocol() {}
-
+void printf(const char*);
+void printf(uint32_t);
 bool AddressResolutionProtocol::OnEtherFrameReceived(uint8_t* etherframePayload, uint32_t size) {
   if (size < sizeof(AddressResolutionProtocolMessage)) return false;
   AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)etherframePayload;
   if (arp->hardwareType == 0x0100) {
-    if (arp->protocol == 0x0008 && arp->hardwareAddressSize == 6 && arp->protocolAddressSize == 4 &&
-        arp->dstIP == backend->GetIPAddress()) {
+    if (arp->protocol == 0x0008 && arp->hardwareAddressSize == 6 && arp->protocolAddressSize == 4 && arp->dstIP == backend->GetIPAddress()) {
           switch (arp->command) {
           case 0x0100: // request
             arp->command = 0x0200;
@@ -26,7 +25,6 @@ bool AddressResolutionProtocol::OnEtherFrameReceived(uint8_t* etherframePayload,
             arp->srcIP = backend->GetIPAddress();
             arp->srcMAC = backend->GetMACAddress();
             return true;
-            break;
           case 0x0200: // response
             if (numCacheEntries < 128) {
               IPcache[numCacheEntries] = arp->srcIP;
@@ -56,7 +54,6 @@ void AddressResolutionProtocol::RequestMACAddress(uint32_t IP_BE) {
   arp.srcIP = backend->GetIPAddress();
   arp.dstMAC = 0xFFFFFFFFFFFF; // broadcast
   arp.dstIP = IP_BE;
-
   this->Send(arp.dstMAC, (uint8_t*)&arp, sizeof(AddressResolutionProtocolMessage));
 
 }
@@ -76,7 +73,7 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE) {
   return result;
 }
 
-void AddressResolutionProtocol::BroadCaseMACAddress(uint32_t IP_BE) {
+void AddressResolutionProtocol::BroadcastMACAddress(uint32_t IP_BE) {
   AddressResolutionProtocolMessage arp;
   arp.hardwareType = 0x0100;
   arp.protocol = 0x0008;
@@ -88,6 +85,5 @@ void AddressResolutionProtocol::BroadCaseMACAddress(uint32_t IP_BE) {
   arp.srcIP = backend->GetIPAddress();
   arp.dstMAC = Resolve(IP_BE);
   arp.dstIP = IP_BE;
-
   this->Send(arp.dstMAC, (uint8_t*)&arp, sizeof(AddressResolutionProtocolMessage));
 }

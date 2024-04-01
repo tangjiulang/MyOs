@@ -1,7 +1,5 @@
 #include "net/etherframe.h"
 #include "common/types.h"
-#include "drivers/amd_am79c973.h"
-#include "memorymanagement.h"
 
 
 using namespace myos;
@@ -9,10 +7,12 @@ using namespace common;
 using namespace drivers;
 using namespace net;
 
+void printf(const char*);
+void printf(uint32_t);
 EtherFrameHandler::EtherFrameHandler(EtherFrameProvider* backend, uint16_t etherTYPE_BE) : backend(backend){
   this->etherTYPE_BE = ((etherTYPE_BE & 0x00FF) << 8)
                      | ((etherTYPE_BE & 0xFF00) >> 8);
-  backend->handlers[etherTYPE_BE] = this;
+  backend->handlers[this->etherTYPE_BE] = this;
 }
 EtherFrameHandler::~EtherFrameHandler() {
   if (backend->handlers[etherTYPE_BE] == this)
@@ -37,6 +37,7 @@ EtherFrameProvider::EtherFrameProvider(amd_am79c973* backend) : RawDataHandler(b
 
 EtherFrameProvider::~EtherFrameProvider() {}
 
+
 bool EtherFrameProvider::OnRawDataReceived(uint8_t* buffer, uint32_t size) {
   if (size < sizeof(EtherFrameHeader))
     return false;
@@ -45,9 +46,11 @@ bool EtherFrameProvider::OnRawDataReceived(uint8_t* buffer, uint32_t size) {
 
   if (frame->dstMAC_BE == 0xFFFFFFFFFFFF ||
       frame->dstMAC_BE == backend->GetMACAddress()) {
-
-    if (handlers[frame->etherTYPE_BE] != 0)
+    printf(frame->etherTYPE_BE);
+    if (handlers[frame->etherTYPE_BE] != 0) {
       sendBack = handlers[frame->etherTYPE_BE]->OnEtherFrameReceived(buffer + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
+    }
+      
   }
 
   if (sendBack) {

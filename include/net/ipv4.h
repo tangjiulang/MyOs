@@ -31,9 +31,9 @@ namespace myos {
       InternetProtocolV4Handler(InternetProtocolV4Provider* backend, common::uint8_t protocol);
       ~InternetProtocolV4Handler();
 
-      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internelProtocolPayload, common::uint32_t size);
+      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internetProtocolPayload, common::uint32_t size);
 
-      void Send(common::uint32_t dstIP_BE, common::uint8_t* internelProtocolPayload, common::uint32_t size);
+      void Send(common::uint32_t dstIP_BE, common::uint8_t* internetProtocolPayload, common::uint32_t size);
     protected:
       InternetProtocolV4Provider* backend;
       common::uint8_t protocol;
@@ -44,7 +44,7 @@ namespace myos {
     public:
       InternetProtocolV4Provider(EtherFrameProvider* backend, AddressResolutionProtocol* arp, common::uint32_t gatewayIP, common::uint32_t subnetMask);
       ~InternetProtocolV4Provider();
-      bool OnEtherFrameReceived(common::uint8_t* etherframePayload, common::uint32_t size);
+      bool OnEtherFrameReceived(common::uint8_t* etherframePayload, common::uint32_t size) override;
       void Send(common::uint32_t dstIP_BE, common::uint8_t protocol, common::uint8_t* data, common::uint32_t size);
       static common::uint16_t CheckSum(common::uint16_t* data, common::uint32_t size);
 

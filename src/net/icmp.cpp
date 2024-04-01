@@ -1,6 +1,4 @@
 #include "net/icmp.h"
-#include "common/types.h"
-#include "net/ipv4.h"
 
 using namespace myos;
 using namespace common;
@@ -9,10 +7,11 @@ using namespace net;
 void printf(const char*);
 void printf(uint16_t);
 
-InternetControlMessageProtocolHandler::InternetControlMessageProtocolHandler(InternetProtocolV4Provider* backend) : InternetProtocolV4Handler(backend) {}
-bool InternetControlMessageProtocolHandler::OnInternetProtocolReceive(uint32_t srcIP_BE, uint32_t dstIP_BE, uint8_t* internelProtocolPayload, uint32_t size) {
+InternetControlMessageProtocolHandler::InternetControlMessageProtocolHandler(InternetProtocolV4Provider* backend) : InternetProtocolV4Handler(backend, 0x01) {}
+
+bool InternetControlMessageProtocolHandler::OnInternetProtocolReceive(uint32_t srcIP_BE, uint32_t dstIP_BE, uint8_t* internetProtocolPayload, uint32_t size) {
   if (size < sizeof(InternetControlMessageProtocolMessage)) return false;
-  InternetControlMessageProtocolMessage* message = (InternetControlMessageProtocolMessage*)internelProtocolPayload;
+  InternetControlMessageProtocolMessage* message = (InternetControlMessageProtocolMessage*)internetProtocolPayload;
   switch (message->type) {
   case 0:
     printf("ping response from ");
@@ -37,7 +36,7 @@ void InternetControlMessageProtocolHandler::RequestEchoReply(common::uint32_t ip
    icmp.type = 8;
    icmp.code = 0;
    icmp.data = 0x3713;
-   icmp.checkSum = InternetProtocolV4Provider::CheckSum((uint16_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
-
+   icmp.checkSum = InternetProtocolV4Provider::CheckSum((uint16_t*)&icmp, (uint32_t)sizeof(InternetControlMessageProtocolMessage));
+   printf("\nicmp send\n");
    InternetProtocolV4Handler::Send(ip_be, (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
 }

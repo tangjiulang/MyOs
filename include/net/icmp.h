@@ -17,10 +17,9 @@ namespace myos {
       InternetControlMessageProtocolHandler(InternetProtocolV4Provider* backend);
       ~InternetControlMessageProtocolHandler();
 
-      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internelProtocolPayload, common::uint32_t size);
+      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internetProtocolPayload, common::uint32_t size);
       void RequestEchoReply(common::uint32_t ip_be);
     };
-    class InternetControlMessageProtocolProvider;
   }
 }
 

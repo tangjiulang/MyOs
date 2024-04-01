@@ -22,25 +22,26 @@ namespace myos {
       UserDatagramProtocolHandler();
       ~UserDatagramProtocolHandler();
 
-      virtual void HandleUserDatagramProtocolMessage(UserDatagramProtocolSocket* socket, common::uint8_t* data, common::uint16_t size);
+      virtual void HandleUserDatagramProtocolMessage(UserDatagramProtocolSocket* socket, common::uint8_t* data, common::uint16_t size) = 0;
     };
 
     class UserDatagramProtocolSocket {
       friend class UserDatagramProtocolHandler;
+      friend class UserDatagramProtocolProvider;
     public:
       UserDatagramProtocolSocket(UserDatagramProtocolProvider* backend);
       ~UserDatagramProtocolSocket();
 
       virtual void HandleUserDatagramProtocolMessage(common::uint8_t* data, common::uint16_t size);
       virtual void Send(common::uint8_t* data, common::uint16_t size);
-      virtual void DisConnected();
+      virtual void DisConnect();
     protected:
       common::uint16_t remotePort;
       common::uint16_t remoteIP;
       common::uint16_t localPort;
       common::uint16_t localIP;
 
-      bool listenning;
+      bool listening;
       UserDatagramProtocolProvider* backend;
       UserDatagramProtocolHandler* handler;
     };
@@ -50,16 +51,17 @@ namespace myos {
       UserDatagramProtocolProvider(InternetProtocolV4Provider* backend);
       ~UserDatagramProtocolProvider();
 
-      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internelProtocolPayload, common::uint32_t size);
+      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internelProtocotPayload, common::uint32_t size);
 
       virtual UserDatagramProtocolSocket* Connect(common::uint32_t ip, common::uint16_t port);
       virtual UserDatagramProtocolSocket* Listen(common::uint16_t port);
-      virtual void* DisConnect(UserDatagramProtocolSocket* socket);
+      virtual void DisConnect(UserDatagramProtocolSocket* socket);
       virtual void Send(UserDatagramProtocolSocket* socket, common::uint8_t* data, common::uint16_t size);
       virtual void Bind(UserDatagramProtocolSocket* socket, UserDatagramProtocolHandler* handler);
     protected:
-      UserDatagramProtocolSocket* socket[65535];
-      int numSockets;
+      UserDatagramProtocolSocket* sockets[65535];
+      common::uint16_t numSockets;
+      common::uint16_t freePort;
     };
   }
 } 
