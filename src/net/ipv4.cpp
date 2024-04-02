@@ -90,7 +90,6 @@ void InternetProtocolV4Provider::Send(uint32_t dstIP_BE, uint8_t protocol, uint8
   if ((dstIP_BE & subnetMask) != (message->srcIP & subnetMask)) {
     route = gatewayIP;
   }
-  printf("\nIPV4 SENDING\n");
   backend->Send(arp->Resolve(route), this->etherTYPE_BE, buffer, sizeof(InternetProtocolV4Message) + size);
   MemoryManager::activeMemoryManager->free(buffer);
 }

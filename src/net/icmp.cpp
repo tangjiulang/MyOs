@@ -37,6 +37,6 @@ void InternetControlMessageProtocolHandler::RequestEchoReply(common::uint32_t ip
    icmp.code = 0;
    icmp.data = 0x3713;
    icmp.checkSum = InternetProtocolV4Provider::CheckSum((uint16_t*)&icmp, (uint32_t)sizeof(InternetControlMessageProtocolMessage));
-   printf("\nicmp send\n");
+  //  printf("\nicmp send\n");
    InternetProtocolV4Handler::Send(ip_be, (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
 }

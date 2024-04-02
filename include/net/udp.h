@@ -51,7 +51,7 @@ namespace myos {
       UserDatagramProtocolProvider(InternetProtocolV4Provider* backend);
       ~UserDatagramProtocolProvider();
 
-      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internelProtocotPayload, common::uint32_t size);
+      virtual bool OnInternetProtocolReceive(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE, common::uint8_t* internetProtocolPayload, common::uint32_t size);
 
       virtual UserDatagramProtocolSocket* Connect(common::uint32_t ip, common::uint16_t port);
       virtual UserDatagramProtocolSocket* Listen(common::uint16_t port);

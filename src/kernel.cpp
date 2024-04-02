@@ -18,6 +18,7 @@
 #include "net/ipv4.h"
 #include "net/icmp.h"
 #include "net/udp.h"
+#include "net/tcp.h"
  
 
 using namespace myos;
@@ -76,6 +77,11 @@ void printf(uint16_t key) {
 void printf(uint32_t key) {
     printf((uint16_t)((key >> 16) & 0xFFFF));
     printf((uint16_t)(key & 0xFFFF));
+}
+
+void printf(uint64_t key) {
+    printf((uint32_t)((key >> 32) & 0xFFFFFFFF));
+    printf((uint32_t)(key & 0xFFFFFFFF));
 }
 
 class PrintKeyboardEventHandler : public KeyboardEventHandler {
@@ -154,6 +160,18 @@ public:
     }
 };
 
+class PrintfTCPHandler : public TransmissionControlProtocolHandler {
+public:
+    bool HandleUserDatagramProtocolMessage(TransmissionControlProtocolSocket* socket, common::uint8_t* data, common::uint16_t size) {
+        char* foo = (char*)"";
+        for (int i = 0; i < size; i++) {
+            foo[0] = data[i];
+            printf(foo);
+        }
+        return true;
+    }
+};
+
 extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
 
     // SET GLOBAL DESCRIPTOR TABLE
@@ -212,7 +230,7 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
 
     // SET PCI DRIVER
     PeripheralComponentInterconnectController PCIController;
-    PCIController.SelectDriver(&drvManager, &interrupts);
+    PCIController.SelectDrivers(&drvManager, &interrupts);
 
     VideoGraphicsArray vga;
 
@@ -259,6 +277,13 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
                    | ((uint32_t)gip2 << 8)
                    | ((uint32_t)gip1);
     
+
+    uint8_t gip11 = 10, gip12 = 0, gip13 = 2, gip14 = 5;
+    uint32_t gip1_be = ((uint32_t)gip14 << 24)
+                   | ((uint32_t)gip13 << 16)
+                   | ((uint32_t)gip12 << 8)
+                   | ((uint32_t)gip11);
+
     amd_am79c973* eth0 = (amd_am79c973*)(drvManager.drivers[2]);
 
     eth0->SetIPAddress(ip_be);
@@ -277,16 +302,24 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
     InternetProtocolV4Provider ipv4(&etherframe, &arp, gip_be, subnet_be);
     InternetControlMessageProtocolHandler icmp(&ipv4);
     UserDatagramProtocolProvider udp(&ipv4);
+    TransmissionControlProtocolProvider tcp(&ipv4);
     interrupts.Activate();
-    // arp.Resolve(gip_be);
+    // printf(arp.Resolve(gip_be));
+
     // ipv4.Send(gip_be, 0x0008, (uint8_t*)"Hello Network", 13);
     arp.BroadcastMACAddress(gip_be);
-    icmp.RequestEchoReply(gip_be);
-    PrintfUDPHandler udpHandler;
-    UserDatagramProtocolSocket* socket = udp.Listen(1234);
-    udp.Bind(socket, &udpHandler);
+    // arp.BroadcastMACAddress(gip_be);
+    // icmp.RequestEchoReply(gip_be);
+    // PrintfUDPHandler udpHandler;
+    // UserDatagramProtocolSocket* socket = udp.Listen(1234);
+    // udp.Bind(socket, &udpHandler);
     // udp.Send(socket, (uint8_t*)"Hello World!", 12);
 
+    // tcp.Connect(gip_be, 1234);
+    PrintfTCPHandler tcphandler;
+    TransmissionControlProtocolSocket* tcpsocket = tcp.Connect(gip_be, 1234);
+    tcp.Bind(tcpsocket, &tcphandler);
+    tcp.Send(tcpsocket, (uint8_t*)"Hello World!", 12);
     while(1) {
 #ifdef GRAPHICMODE
       desktop.Draw(&vga);

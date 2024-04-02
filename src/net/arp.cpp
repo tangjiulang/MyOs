@@ -39,8 +39,6 @@ bool AddressResolutionProtocol::OnEtherFrameReceived(uint8_t* etherframePayload,
   return false;
 }
 
-void printf(const char*);
-void printf(uint32_t);
 
 void AddressResolutionProtocol::RequestMACAddress(uint32_t IP_BE) {
   AddressResolutionProtocolMessage arp;

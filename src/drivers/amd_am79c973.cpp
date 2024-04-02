@@ -17,6 +17,7 @@ RawDataHandler::~RawDataHandler() {
 bool RawDataHandler::OnRawDataReceived(uint8_t* buffer, uint32_t size) {
   return false;
 }
+
 void RawDataHandler::Send(uint8_t* buffer, uint32_t size) {
   backend->Send(buffer, size);
 }
@@ -59,8 +60,8 @@ amd_am79c973::amd_am79c973(PeripheralComponentInterconnectDeviceDescriptor* dev,
       registerAddressPort.Write(0);
       registerDataPort.Write(0x04);
 
-      // initialization block
-      initBlock.mode = 0x0000; // promiscuous mode = false;
+      // initBlock
+      initBlock.mode = 0x0000; // promiscuous mode = false
       initBlock.reserved1 = 0;
       initBlock.numSendBuffers = 3;
       initBlock.reserved2 = 0;
@@ -75,15 +76,15 @@ amd_am79c973::amd_am79c973(PeripheralComponentInterconnectDeviceDescriptor* dev,
       initBlock.recvBufferDescrAddress = (uint32_t)recvBufferDescr;
 
       for (uint8_t i = 0; i < 8; i++) {
-        sendBufferDescr[i].address = ((((uint32_t)&sendBuffers[i]) + 15) & ~((uint32_t)0xF));
+        sendBufferDescr[i].address = (((uint32_t)&sendBuffers[i]) + 15) & ~(uint32_t)0xF;
         sendBufferDescr[i].flags = 0x7FF | 0xF000;
         sendBufferDescr[i].flags2 = 0;
         sendBufferDescr[i].avail = 0;
         
-        recvBufferDescr[i].address = ((((uint32_t)&recvBuffers[i]) + 15) & ~((uint32_t)0xF));
+        recvBufferDescr[i].address = (((uint32_t)&recvBuffers[i]) + 15) & ~(uint32_t)0xF;
         recvBufferDescr[i].flags = 0xF7FF | 0x80000000;
         recvBufferDescr[i].flags2 = 0;
-        recvBufferDescr[i].avail = 0;
+        sendBufferDescr[i].avail = 0;
       }
 
       registerAddressPort.Write(1);
@@ -167,7 +168,7 @@ void amd_am79c973::Receive() {
           printf(buffer[i]);
           printf(" ");
       }
-      
+
       if (handler != 0) 
         if (handler->OnRawDataReceived(buffer, size))
           Send(buffer, size);
