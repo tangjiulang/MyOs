@@ -19,7 +19,8 @@
 #include "net/icmp.h"
 #include "net/udp.h"
 #include "net/tcp.h"
- 
+#include "filesystem/msdospart.h"
+#include "filesystem/fat.h"
 
 using namespace myos;
 using namespace myos::common;
@@ -27,6 +28,7 @@ using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
 using namespace myos::gui;
 using namespace myos::net;
+using namespace myos::filesystem;
 
 void printf(const char* str) {
     static uint16_t* VideoMemory = (uint16_t*) 0xb8000;
@@ -246,68 +248,71 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
 #endif
     
     // interrupt 14
-    // AdvancedTechnologyAttachment ata0m(0x1F0, true);
-    // printf("ATA Primary Master: ");
-    // ata0m.Identify();
-    // AdvancedTechnologyAttachment ata0s(0x1F0, false);
-    // printf("ATA Primary Slave: ");
-    // ata0s.Identify();
-    // char* atabuffer = (char*)"http://ATangyl.de";
+    AdvancedTechnologyAttachment ata0m(0x1F0, true);
+    printf("ATA Primary Master: ");
+    ata0m.Identify();
+    AdvancedTechnologyAttachment ata0s(0x1F0, false);
+    printf("ATA Primary Slave: ");
+    ata0s.Identify();
+    
+    MSDOSPartitionTable::ReadPartitions(&ata0m);
+    
+    char* atabuffer = (char*)"http://ATangyl.de";
     // ata0s.Write28(0, (uint8_t*)atabuffer, 25);
     // ata0s.Flush();
     // ata0s.Read28(0, (uint8_t*)atabuffer, 25);
 
 
     // interrupt 15
-    // AdvancedTechnologyAttachment ata1m(0x170, true);
-    // AdvancedTechnologyAttachment ata1s(0x170, false);
+    AdvancedTechnologyAttachment ata1m(0x170, true);
+    AdvancedTechnologyAttachment ata1s(0x170, false);
     
     // third: 0x1E8
     // fourth: 0x168
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
-    uint32_t ip_be = ((uint32_t)ip4 << 24)
-                   | ((uint32_t)ip3 << 16)
-                   | ((uint32_t)ip2 << 8)
-                   | ((uint32_t)ip1);
+    // printf("\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    // uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
+    // uint32_t ip_be = ((uint32_t)ip4 << 24)
+    //                | ((uint32_t)ip3 << 16)
+    //                | ((uint32_t)ip2 << 8)
+    //                | ((uint32_t)ip1);
     
-    uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
-    uint32_t gip_be = ((uint32_t)gip4 << 24)
-                   | ((uint32_t)gip3 << 16)
-                   | ((uint32_t)gip2 << 8)
-                   | ((uint32_t)gip1);
+    // uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
+    // uint32_t gip_be = ((uint32_t)gip4 << 24)
+    //                | ((uint32_t)gip3 << 16)
+    //                | ((uint32_t)gip2 << 8)
+    //                | ((uint32_t)gip1);
     
 
-    uint8_t gip11 = 10, gip12 = 0, gip13 = 2, gip14 = 5;
-    uint32_t gip1_be = ((uint32_t)gip14 << 24)
-                   | ((uint32_t)gip13 << 16)
-                   | ((uint32_t)gip12 << 8)
-                   | ((uint32_t)gip11);
+    // uint8_t gip11 = 10, gip12 = 0, gip13 = 2, gip14 = 5;
+    // uint32_t gip1_be = ((uint32_t)gip14 << 24)
+    //                | ((uint32_t)gip13 << 16)
+    //                | ((uint32_t)gip12 << 8)
+    //                | ((uint32_t)gip11);
 
-    amd_am79c973* eth0 = (amd_am79c973*)(drvManager.drivers[2]);
+    // amd_am79c973* eth0 = (amd_am79c973*)(drvManager.drivers[2]);
 
-    eth0->SetIPAddress(ip_be);
+    // eth0->SetIPAddress(ip_be);
 
-    EtherFrameProvider etherframe(eth0);
+    // EtherFrameProvider etherframe(eth0);
 
-    AddressResolutionProtocol arp(&etherframe);
+    // AddressResolutionProtocol arp(&etherframe);
 
-    uint8_t subnet1 = 255, subnet2 = 255, subnet3 = 255, subnet4 = 0;
+    // uint8_t subnet1 = 255, subnet2 = 255, subnet3 = 255, subnet4 = 0;
 
-    uint32_t subnet_be = ((uint32_t)subnet4 << 24)
-                   | ((uint32_t)subnet3 << 16)
-                   | ((uint32_t)subnet2 << 8)
-                   | ((uint32_t)subnet1);
+    // uint32_t subnet_be = ((uint32_t)subnet4 << 24)
+    //                | ((uint32_t)subnet3 << 16)
+    //                | ((uint32_t)subnet2 << 8)
+    //                | ((uint32_t)subnet1);
     
-    InternetProtocolV4Provider ipv4(&etherframe, &arp, gip_be, subnet_be);
-    InternetControlMessageProtocolHandler icmp(&ipv4);
-    UserDatagramProtocolProvider udp(&ipv4);
-    TransmissionControlProtocolProvider tcp(&ipv4);
-    interrupts.Activate();
+    // InternetProtocolV4Provider ipv4(&etherframe, &arp, gip_be, subnet_be);
+    // InternetControlMessageProtocolHandler icmp(&ipv4);
+    // UserDatagramProtocolProvider udp(&ipv4);
+    // TransmissionControlProtocolProvider tcp(&ipv4);
+    // interrupts.Activate();
     // printf(arp.Resolve(gip_be));
 
     // ipv4.Send(gip_be, 0x0008, (uint8_t*)"Hello Network", 13);
-    arp.BroadcastMACAddress(gip_be);
+    // arp.BroadcastMACAddress(gip_be);
     // arp.BroadcastMACAddress(gip_be);
     // icmp.RequestEchoReply(gip_be);
     // PrintfUDPHandler udpHandler;
@@ -316,10 +321,10 @@ extern "C" void kernelMain(void* multiboot_structure, uint32_t magicnumber) {
     // udp.Send(socket, (uint8_t*)"Hello World!", 12);
 
     // tcp.Connect(gip_be, 1234);
-    PrintfTCPHandler tcphandler;
-    TransmissionControlProtocolSocket* tcpsocket = tcp.Connect(gip_be, 1234);
-    tcp.Bind(tcpsocket, &tcphandler);
-    tcp.Send(tcpsocket, (uint8_t*)"Hello World!", 12);
+    // PrintfTCPHandler tcphandler;
+    // TransmissionControlProtocolSocket* tcpsocket = tcp.Connect(gip_be, 1234);
+    // tcp.Bind(tcpsocket, &tcphandler);
+    // tcp.Send(tcpsocket, (uint8_t*)"Hello World!", 12);
     while(1) {
 #ifdef GRAPHICMODE
       desktop.Draw(&vga);

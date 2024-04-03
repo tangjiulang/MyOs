@@ -27,6 +27,8 @@ objects = obj/loader.o \
 					obj/net/icmp.o\
 					obj/net/udp.o\
 					obj/net/tcp.o\
+					obj/filesystem/fat.o\
+					obj/filesystem/msdospart.o\
 					obj/kernel.o
 
 obj/%.o: src/%.cpp

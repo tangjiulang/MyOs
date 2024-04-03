@@ -52,8 +52,8 @@ void AdvancedTechnologyAttachment::Identify() {
   for (int i = 0; i < 256; i++) {
     uint16_t data = dataPort.Read();
     char* foo = (char*)"  \0";
-    foo[1] = (data >> 8 & 0xFF);
-    foo[0] = (data & 0xFF);
+    foo[0] = (data >> 8 & 0xFF);
+    foo[1] = (data & 0xFF);
     printf(foo);
   }
 }
